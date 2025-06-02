@@ -56,16 +56,41 @@ export async function POST(request: NextRequest) {
     // 创建 OpenAI 客户端并使用 DALL-E 进行图像生成
     const openai = createOpenAIClient();
     
-    // 直接使用优化的简短prompt，跳过图片分析以节省时间
-    const prompt = `Studio Ghibli Spirited Away anime portrait. Hand-drawn cel animation, soft warm colors, large expressive eyes like Chihiro, clean lines. High quality, bright tone.`;
+    // 使用快速的图片分析，只关注关键特征
+    const analysisResponse = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // 使用更快的mini模型
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Describe key features only: hair color, hair style, gender, age range. Keep under 30 words."
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: image
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 50, // 大幅减少token数量
+    });
+
+    const features = analysisResponse.choices[0]?.message?.content || "person";
+
+    // 使用简化的prompt结合用户特征
+    const prompt = `Studio Ghibli Spirited Away anime portrait of ${features}. Hand-drawn cel animation, soft warm colors, large expressive eyes like Chihiro, clean lines. High quality.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: prompt,
       n: 1,
       size: "1024x1024",
-      quality: "hd", // hd模式有时比standard更快
-      style: "vivid" // vivid风格通常生成更快
+      quality: "standard", // standard通常比hd更快
+      style: "vivid" // vivid风格通常比natural生成更快
     });
 
     if (!response.data || response.data.length === 0) {
