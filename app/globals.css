@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 44, 62, 80;
+  --background-rgb: 253, 246, 236;
+  --card-background: 255, 248, 231;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  min-height: 100vh;
+}
+
+.card {
+  @apply bg-[rgb(var(--card-background))] rounded-xl p-6 shadow-md border border-[#E6D5B8];
+}
+
+.heading {
+  @apply text-3xl font-semibold text-[#2C3E50] mb-4;
+}
+
+.subheading {
+  @apply text-lg text-[#34495E] mb-6;
+}
+
+.button {
+  @apply px-4 py-2 rounded-lg transition-all duration-200;
+}
+
+.button-primary {
+  @apply bg-[#C4A484] text-white hover:bg-[#B08968];
+}
+
+.button-outline {
+  @apply border-2 border-[#C4A484] text-[#C4A484] hover:bg-[#C4A484] hover:text-white;
+}
+
+.input {
+  @apply px-4 py-2 rounded-lg border border-[#E6D5B8] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#C4A484];
+  }
+
+.checkbox {
+  @apply h-5 w-5 rounded border-[#C4A484] text-[#C4A484] focus:ring-[#C4A484];
+}
+
+.switch {
+  @apply h-6 w-11 rounded-full bg-[#E6D5B8] transition-colors duration-200 ease-in-out;
+}
+
+.switch[data-state="checked"] {
+  @apply bg-[#C4A484];
+}

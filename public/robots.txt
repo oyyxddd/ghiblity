@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ghiblity.com/sitemap.xml
+
+# Block access to internal pages
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/ 
