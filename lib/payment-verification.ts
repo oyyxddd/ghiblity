@@ -1,0 +1,43 @@
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+export async function verifyStripePayment(sessionId: string): Promise<boolean> {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    
+    // 检查支付状态
+    if (session.payment_status === 'paid') {
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Stripe verification error:', error);
+    return false;
+  }
+}
+
+export async function createStripeCheckoutSession(priceId: string, successUrl: string, cancelUrl: string) {
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+    });
+
+    return session;
+  } catch (error) {
+    console.error('Stripe session creation error:', error);
+    throw error;
+  }
+}
+
+export { stripe }; 
