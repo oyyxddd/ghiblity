@@ -1,9 +1,16 @@
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// 只有在有 Stripe 密钥时才初始化 Stripe
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
 
 export async function verifyStripePayment(sessionId: string): Promise<boolean> {
   try {
+    if (!stripe) {
+      console.error('Stripe not initialized');
+      return false;
+    }
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     
     // 检查支付状态
@@ -20,6 +27,9 @@ export async function verifyStripePayment(sessionId: string): Promise<boolean> {
 
 export async function createStripeCheckoutSession(priceId: string, successUrl: string, cancelUrl: string) {
   try {
+    if (!stripe) {
+      throw new Error('Stripe not initialized');
+    }
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [

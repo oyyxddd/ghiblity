@@ -4,14 +4,17 @@ import { supabase, isSupabaseAvailable } from '../../../lib/supabase';
 import type { AvatarGeneration } from '../../../lib/supabase';
 
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('Missing OPENAI_API_KEY environment variable');
-}
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: 'https://aihubmix.com/v1', // 使用 aihubmix 中转服务
-});
+// 移动环境变量检查到函数内部
+const createOpenAIClient = () => {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('Missing OPENAI_API_KEY environment variable');
+  }
+  
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    baseURL: 'https://aihubmix.com/v1', // 使用 aihubmix 中转服务
+  });
+};
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -50,7 +53,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 使用 gpt-4o-image-vip 直接进行图像风格转换
+    // 创建 OpenAI 客户端并使用 gpt-4o-image-vip 直接进行图像风格转换
+    const openai = createOpenAIClient();
     const response = await openai.chat.completions.create({
       model: "gpt-4o-image-vip", // 使用 VIP 图像转换模型
       messages: [
