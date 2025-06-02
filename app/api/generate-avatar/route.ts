@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { supabase } from '../../../lib/supabase';
+import { supabase, isSupabaseAvailable } from '../../../lib/supabase';
 import type { AvatarGeneration } from '../../../lib/supabase';
 
 
@@ -30,22 +30,24 @@ export async function POST(request: NextRequest) {
     // 简化：不再验证支付状态，允许直接生成
     // 在实际生产环境中，这里应该有适当的限制机制
 
-    // 在数据库中创建初始记录
-    const { data: generationRecord, error: dbError } = await supabase
-      .from('avatar_generations')
-      .insert({
-        original_image_url: image.substring(0, 100) + '...', // 截断以避免太长
-        generated_image_url: 'pending', // 临时值，稍后更新
-        method: 'gpt-4o-image-vip',
-        status: 'pending' as const
-      })
-      .select()
-      .single();
+    // 在数据库中创建初始记录（如果 Supabase 可用）
+    if (isSupabaseAvailable && supabase) {
+      const { data: generationRecord, error: dbError } = await supabase
+        .from('avatar_generations')
+        .insert({
+          original_image_url: image.substring(0, 100) + '...', // 截断以避免太长
+          generated_image_url: 'pending', // 临时值，稍后更新
+          method: 'gpt-4o-image-vip',
+          status: 'pending' as const
+        })
+        .select()
+        .single();
 
-    if (dbError) {
-      // 继续执行，不因数据库错误阻塞
-    } else {
-      generationId = generationRecord.id;
+      if (dbError) {
+        // 继续执行，不因数据库错误阻塞
+      } else {
+        generationId = generationRecord.id;
+      }
     }
 
     // 使用 gpt-4o-image-vip 直接进行图像风格转换
@@ -121,8 +123,8 @@ Requirements:
 
     const processingTime = Date.now() - startTime;
 
-    // 更新数据库记录为成功状态
-    if (generationId) {
+    // 更新数据库记录为成功状态（如果可用）
+    if (generationId && isSupabaseAvailable && supabase) {
       const { error: updateError } = await supabase
         .from('avatar_generations')
         .update({
@@ -151,8 +153,8 @@ Requirements:
     const processingTime = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
 
-    // 更新数据库记录为失败状态
-    if (generationId) {
+    // 更新数据库记录为失败状态（如果可用）
+    if (generationId && isSupabaseAvailable && supabase) {
       await supabase
         .from('avatar_generations')
         .update({
