@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '../../../lib/supabase';
+import { supabase, isSupabaseAvailable } from '../../../lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // 检查 Supabase 是否可用
+    if (!isSupabaseAvailable || !supabase) {
+      return NextResponse.json({
+        success: false,
+        error: 'Database not configured',
+        message: 'Avatar history feature requires database configuration'
+      }, { status: 503 });
+    }
+
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
