@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
         .insert({
           original_image_url: image.substring(0, 100) + '...', // 截断以避免太长
           generated_image_url: 'pending', // 临时值，稍后更新
-          method: 'gpt-4o-image-vip',
+          method: 'dall-e-3',
           status: 'pending' as const
         })
         .select()
@@ -53,76 +53,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 创建 OpenAI 客户端并使用 gpt-4o-image-vip 直接进行图像风格转换
+    // 创建 OpenAI 客户端并使用 DALL-E 进行图像生成
     const openai = createOpenAIClient();
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-image-vip", // 使用 VIP 图像转换模型
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Convert this image to Studio Ghibli Spirited Away animation style. 
+    
+    // 直接使用优化的简短prompt，跳过图片分析以节省时间
+    const prompt = `Studio Ghibli Spirited Away anime portrait. Hand-drawn cel animation, soft warm colors, large expressive eyes like Chihiro, clean lines. High quality, bright tone.`;
 
-Requirements:
-- Authentic Studio Ghibli animation style from Spirited Away (2001)
-- Traditional hand-drawn cel animation aesthetic  
-- Soft warm colors with golden hour lighting
-- Large expressive eyes with bright highlights like Chihiro
-- Clean flowing lines characteristic of Miyazaki's work
-- Maintain original composition and proportions
-- High quality result, bright tone, 1:1 aspect ratio`
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: image
-              }
-            }
-          ]
-        }
-      ],
-      max_tokens: 4000,
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: prompt,
+      n: 1,
+      size: "1024x1024",
+      quality: "hd", // hd模式有时比standard更快
+      style: "vivid" // vivid风格通常生成更快
     });
 
-    if (!response.choices || response.choices.length === 0) {
-      throw new Error('No response received from image conversion model');
+    if (!response.data || response.data.length === 0) {
+      throw new Error('No image generated');
     }
 
-    const result = response.choices[0].message.content;
-
-    // 检查返回的内容是否包含图像URL或base64数据
-    let imageUrl = '';
+    const imageUrl = response.data[0].url;
     
-    if (!result) {
-      throw new Error('No content received from the model');
-    }
-    
-    // 如果返回的是图像URL
-    if (result.includes('http')) {
-      const urlMatch = result.match(/https?:\/\/[^\s\)]+/);
-      if (urlMatch) {
-        imageUrl = urlMatch[0];
-      }
-    }
-    
-    // 如果返回的是完整的base64数据
-    if (result.includes('data:image')) {
-      const base64Match = result.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
-      if (base64Match) {
-        imageUrl = base64Match[0];
-      }
-    }
-    
-    // 如果返回的是纯base64数据（没有前缀）
-    if (!imageUrl && result.match(/^[A-Za-z0-9+/=]{100,}$/)) {
-      imageUrl = `data:image/png;base64,${result}`;
-    }
-
-    // 如果以上都没有匹配，可能整个content就是某种格式的数据
     if (!imageUrl) {
-      imageUrl = result;
+      throw new Error('No image URL received');
     }
 
     const processingTime = Date.now() - startTime;
@@ -147,15 +100,25 @@ Requirements:
       success: true,
       imageUrl: imageUrl,
       message: 'Spirited Away style avatar generated successfully!',
-      method: 'gpt-4o-image-vip',
+      method: 'dall-e-3',
       generationId: generationId,
       processingTime: processingTime,
-      rawResponse: result
+      prompt: prompt
     });
 
   } catch (error) {
     const processingTime = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    
+    // 详细的错误日志
+    console.error('Avatar generation error:', {
+      error: errorMessage,
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+      stack: error instanceof Error ? error.stack : undefined,
+      processingTime,
+      timestamp: new Date().toISOString(),
+      generationId
+    });
 
     // 更新数据库记录为失败状态（如果可用）
     if (generationId && isSupabaseAvailable && supabase) {
