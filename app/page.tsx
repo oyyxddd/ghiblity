@@ -177,9 +177,50 @@ export default function Home() {
     setError('');
     setGeneratedImage('');
     
+    // 创建图像压缩和优化
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = document.createElement('img');
+    
+    img.onload = () => {
+      // 限制最大尺寸为1024x1024
+      const maxSize = 1024;
+      let { width, height } = img;
+      
+      if (width > maxSize || height > maxSize) {
+        if (width > height) {
+          height = (height * maxSize) / width;
+          width = maxSize;
+        } else {
+          width = (width * maxSize) / height;
+          height = maxSize;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // 绘制优化后的图像
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      // 转换为高质量的base64
+      const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      setPreview(optimizedDataUrl);
+    };
+    
+    // 如果图像处理失败，使用原始方法
+    img.onerror = () => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    };
+    
+    // 读取图像文件
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPreview(reader.result as string);
+      img.src = reader.result as string;
     };
     reader.readAsDataURL(file);
   };
