@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     // 创建 OpenAI 客户端并使用 DALL-E 进行图像生成
     const openai = createOpenAIClient();
     
-    // 使用快速的图片分析，只关注关键特征
+    // 更详细的图片分析，捕捉更多个人特征
     const analysisResponse = await openai.chat.completions.create({
       model: "gpt-4o-mini", // 使用更快的mini模型
       messages: [
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
           content: [
             {
               type: "text",
-              text: "Describe key features only: hair color, hair style, gender, age range. Keep under 30 words."
+              text: "Describe this person for Ghibli portrait: gender, age, hair color/style/length, eye color, face shape, facial features, skin tone, clothing style. Keep under 80 words, be specific and detailed."
             },
             {
               type: "image_url",
@@ -76,21 +76,21 @@ export async function POST(request: NextRequest) {
           ]
         }
       ],
-      max_tokens: 50, // 大幅减少token数量
+      max_tokens: 120, // 增加token以获得更详细描述
     });
 
-    const features = analysisResponse.choices[0]?.message?.content || "person";
+    const features = analysisResponse.choices[0]?.message?.content || "young person";
 
-    // 使用简化的prompt结合用户特征
-    const prompt = `Studio Ghibli Spirited Away anime portrait of ${features}. Hand-drawn cel animation, soft warm colors, large expressive eyes like Chihiro, clean lines. High quality.`;
+    // 更精确的prompt，保持用户的具体特征
+    const prompt = `Studio Ghibli Spirited Away anime style portrait of ${features}. Maintain the person's specific facial features, hair details, and characteristics while transforming into hand-drawn cel animation aesthetic. Soft warm colors, large expressive anime eyes, clean flowing lines characteristic of classic animation style. High quality, bright tone, magical atmosphere.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: prompt,
       n: 1,
       size: "1024x1024",
-      quality: "standard", // standard通常比hd更快
-      style: "vivid" // vivid风格通常比natural生成更快
+      quality: "hd", // hd质量更好地保持细节特征
+      style: "natural" // natural风格更接近原始特征
     });
 
     if (!response.data || response.data.length === 0) {
