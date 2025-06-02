@@ -56,16 +56,16 @@ export async function POST(request: NextRequest) {
     // 创建 OpenAI 客户端并使用 DALL-E 进行图像生成
     const openai = createOpenAIClient();
     
-    // 更详细的图片分析，捕捉更多个人特征
+    // 使用GPT-4o进行详细图片分析，捕捉用户具体特征
     const analysisResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // 使用更快的mini模型
+      model: "gpt-4o", // 使用完整的GPT-4o获得最佳分析质量
       messages: [
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: "Describe this person for Ghibli portrait: gender, age, hair color/style/length, eye color, face shape, facial features, skin tone, clothing style. Keep under 80 words, be specific and detailed."
+              text: "Describe this person's appearance in detail for creating a Studio Ghibli style portrait. Focus on facial features, hair style, clothing, and overall composition. Keep it under 200 words."
             },
             {
               type: "image_url",
@@ -76,21 +76,21 @@ export async function POST(request: NextRequest) {
           ]
         }
       ],
-      max_tokens: 120, // 增加token以获得更详细描述
+      max_tokens: 250, // 适中的token数量，平衡质量和速度
     });
 
-    const features = analysisResponse.choices[0]?.message?.content || "young person";
+    const description = analysisResponse.choices[0]?.message?.content || "A person";
 
-    // 更精确的prompt，保持用户的具体特征
-    const prompt = `Studio Ghibli Spirited Away anime style portrait of ${features}. Maintain the person's specific facial features, hair details, and characteristics while transforming into hand-drawn cel animation aesthetic. Soft warm colors, large expressive anime eyes, clean flowing lines characteristic of classic animation style. High quality, bright tone, magical atmosphere.`;
+    // 使用详细的prompt，确保保持用户特征
+    const prompt = `Studio Ghibli Spirited Away anime style portrait of ${description}. Traditional hand-drawn cel animation aesthetic with soft warm colors, golden hour lighting, large expressive eyes with bright highlights like Chihiro, clean flowing lines characteristic of classic animation style. High quality, bright tone, detailed background with spirited away atmosphere.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: prompt,
       n: 1,
       size: "1024x1024",
-      quality: "hd", // hd质量更好地保持细节特征
-      style: "natural" // natural风格更接近原始特征
+      quality: "standard", // standard质量，平衡速度和质量
+      style: "vivid" // vivid风格，生成更快且色彩鲜艳
     });
 
     if (!response.data || response.data.length === 0) {
