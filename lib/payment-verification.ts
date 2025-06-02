@@ -40,4 +40,16 @@ export async function createStripeCheckoutSession(priceId: string, successUrl: s
   }
 }
 
+// 简单的内存存储（生产环境应该使用数据库）
+const paidSessions = new Set<string>();
+
+export function recordPayment(sessionId: string): void {
+  paidSessions.add(sessionId);
+  console.log('Payment recorded for session:', sessionId);
+}
+
+export function verifyPayment(sessionId: string): boolean {
+  return paidSessions.has(sessionId);
+}
+
 export { stripe }; 
