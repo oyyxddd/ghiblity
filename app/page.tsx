@@ -332,7 +332,7 @@ export default function Home() {
     setIsGenerating(true);
     setError('');
     setCountdown(80);
-    setAsyncStatus('启动生成任务...');
+    setAsyncStatus('Starting generation task...');
     
     try {
       // 第一步：启动异步生成任务
@@ -359,7 +359,7 @@ export default function Home() {
 
       const taskId = data.taskId;
       setCurrentTaskId(taskId);
-      setAsyncStatus('任务已启动，正在生成中...');
+      setAsyncStatus('Task started, generating in progress...');
       
       // 第二步：开始轮询任务状态
       await pollTaskStatus(taskId);
@@ -406,9 +406,9 @@ export default function Home() {
             clearInterval(pollInterval);
             clearInterval(countdownInterval);
             
-            if (data.imageUrl) {
-              setGeneratedImage(data.imageUrl);
-              setAsyncStatus('头像生成完成！');
+                         if (data.imageUrl) {
+               setGeneratedImage(data.imageUrl);
+               setAsyncStatus('Avatar generation completed!');
               
               // Google Analytics 事件埋点
               if (typeof window !== 'undefined' && window.gtagEvent) {
@@ -440,10 +440,10 @@ export default function Home() {
             localStorage.removeItem('pending_image');
             localStorage.removeItem('pending_generation');
             
-          } else if (status === 'processing') {
-            setAsyncStatus('正在生成吉卜力风格头像...');
-          } else if (status === 'pending') {
-            setAsyncStatus('任务排队中，即将开始生成...');
+                     } else if (status === 'processing') {
+             setAsyncStatus('Generating Studio Ghibli style avatar...');
+           } else if (status === 'pending') {
+             setAsyncStatus('Task queued, will start generating soon...');
           }
         }
         
@@ -1030,12 +1030,12 @@ export default function Home() {
                           </span>
                         </div>
                         
-                        {/* Task ID for debugging */}
-                        {currentTaskId && (
-                          <p className="text-xs text-gray-400 font-mono">
-                            任务ID: {currentTaskId.substring(0, 8)}...
-                          </p>
-                        )}
+                                                 {/* Task ID for debugging */}
+                         {currentTaskId && (
+                           <p className="text-xs text-gray-400 font-mono">
+                             Task ID: {currentTaskId.substring(0, 8)}...
+                           </p>
+                         )}
                       </div>
                     </div>
                   ) : (
