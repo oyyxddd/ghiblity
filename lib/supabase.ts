@@ -15,9 +15,9 @@ export const isSupabaseAvailable = !!(supabaseUrl && supabaseAnonKey);
 export interface AvatarGeneration {
   id: string;
   user_email?: string;
-  original_image_url: string;
+  original_image_base64: string;
   generated_image_url?: string;
-  status: 'pending' | 'success' | 'failed';
+  status: 'pending' | 'processing' | 'success' | 'failed';
   created_at: string;
   updated_at: string;
   error_message?: string;

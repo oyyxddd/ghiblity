@@ -72,6 +72,8 @@ export default function Home() {
   const [error, setError] = useState<string>('');
   const [paymentCompleted, setPaymentCompleted] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number>(80);
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [asyncStatus, setAsyncStatus] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 检查是否有待生成的任务 + 添加全局粘贴监听
@@ -290,6 +292,8 @@ export default function Home() {
     setPaymentCompleted(false);
     setIsGenerating(false);
     setCountdown(80);
+    setCurrentTaskId(null);
+    setAsyncStatus('');
     // 清空 localStorage 中的待处理数据
     localStorage.removeItem('pending_generation');
     localStorage.removeItem('pending_image');
@@ -314,7 +318,7 @@ export default function Home() {
     setError('Generation cancelled. Please try again.');
   };
 
-  // 生成头像的主要函数
+  // 异步生成头像的主要函数
   const handleGenerate = async () => {
     const pendingImage = localStorage.getItem('pending_image');
     const pendingGeneration = localStorage.getItem('pending_generation');
@@ -328,27 +332,18 @@ export default function Home() {
     setIsGenerating(true);
     setError('');
     setCountdown(80);
-    
-    // 启动倒计时
-    const countdownInterval = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    setAsyncStatus('启动生成任务...');
     
     try {
-      const response = await fetch('/api/generate-avatar', {
+      // 第一步：启动异步生成任务
+      const response = await fetch('/api/generate-avatar-async', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           image: pendingImage,
-          sessionId: 'no-payment-required', // No payment verification required
+          sessionId: 'no-payment-required',
         }),
       });
 
@@ -359,44 +354,119 @@ export default function Home() {
       }
 
       if (!data.success) {
-        throw new Error(data.message || 'Failed to generate avatar');
-      }
-      
-      // 处理不同格式的图片数据
-      let imageUrl = data.imageUrl;
-      
-      // 如果返回的是纯文本且包含base64数据，确保格式正确
-      if (imageUrl && !imageUrl.startsWith('data:image/') && !imageUrl.startsWith('http')) {
-        // 可能是纯base64数据，添加前缀
-        imageUrl = `data:image/png;base64,${imageUrl}`;
-      }
-      
-      if (!imageUrl) {
-        throw new Error('No image data received from API');
+        throw new Error(data.message || 'Failed to start generation task');
       }
 
-      setGeneratedImage(imageUrl);
+      const taskId = data.taskId;
+      setCurrentTaskId(taskId);
+      setAsyncStatus('任务已启动，正在生成中...');
       
-      // Google Analytics 事件埋点 - 生成成功
-      if (typeof window !== 'undefined' && window.gtagEvent) {
-        window.gtagEvent('purchase', 'ecommerce', 'avatar_generation_success', 1);
-        window.gtagEvent('generate_avatar', 'conversion', 'success', 1);
-      }
-      
-      // 清除存储的数据
-      localStorage.removeItem('pending_image');
-      localStorage.removeItem('pending_generation');
+      // 第二步：开始轮询任务状态
+      await pollTaskStatus(taskId);
       
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to generate avatar. Please try again.');
+      setAsyncStatus('');
       
       // 发生错误时也清除存储的数据
       localStorage.removeItem('pending_image');
       localStorage.removeItem('pending_generation');
-    } finally {
       setIsGenerating(false);
-      setCountdown(80); // 重置倒计时
+      setCountdown(80);
     }
+  };
+
+  // 轮询任务状态
+  const pollTaskStatus = async (taskId: string) => {
+    const maxAttempts = 120; // 最多轮询2分钟（每3秒一次）
+    let attempts = 0;
+    
+    // 启动倒计时
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const pollInterval = setInterval(async () => {
+      attempts++;
+      
+      try {
+        const response = await fetch(`/api/check-status?taskId=${taskId}`);
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          const status = data.status;
+          
+          if (status === 'success') {
+            // 任务完成
+            clearInterval(pollInterval);
+            clearInterval(countdownInterval);
+            
+            if (data.imageUrl) {
+              setGeneratedImage(data.imageUrl);
+              setAsyncStatus('头像生成完成！');
+              
+              // Google Analytics 事件埋点
+              if (typeof window !== 'undefined' && window.gtagEvent) {
+                window.gtagEvent('purchase', 'ecommerce', 'avatar_generation_success', 1);
+                window.gtagEvent('generate_avatar', 'conversion', 'success', 1);
+              }
+              
+              // 清除存储的数据
+              localStorage.removeItem('pending_image');
+              localStorage.removeItem('pending_generation');
+            } else {
+              throw new Error('No image received from completed task');
+            }
+            
+            setIsGenerating(false);
+            setCurrentTaskId(null);
+            
+          } else if (status === 'failed') {
+            // 任务失败
+            clearInterval(pollInterval);
+            clearInterval(countdownInterval);
+            
+            setError(data.error || 'Generation failed');
+            setAsyncStatus('');
+            setIsGenerating(false);
+            setCurrentTaskId(null);
+            setCountdown(80);
+            
+            localStorage.removeItem('pending_image');
+            localStorage.removeItem('pending_generation');
+            
+          } else if (status === 'processing') {
+            setAsyncStatus('正在生成吉卜力风格头像...');
+          } else if (status === 'pending') {
+            setAsyncStatus('任务排队中，即将开始生成...');
+          }
+        }
+        
+        // 检查是否超时
+        if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+          clearInterval(countdownInterval);
+          
+          setError('Generation timeout. Please try again.');
+          setAsyncStatus('');
+          setIsGenerating(false);
+          setCurrentTaskId(null);
+          setCountdown(80);
+          
+          localStorage.removeItem('pending_image');
+          localStorage.removeItem('pending_generation');
+        }
+        
+      } catch (error) {
+        console.error('Polling error:', error);
+        // 继续轮询，除非达到最大尝试次数
+      }
+    }, 3000); // 每3秒检查一次
   };
 
   // 生成文件名的工具函数
@@ -944,7 +1014,7 @@ export default function Home() {
                       {/* Generation Status */}
                       <div className="text-center space-y-3">
                         <h3 className="text-lg font-semibold text-[#2C3E50]">
-                          Generating your image...
+                          {asyncStatus || 'Generating your image...'}
                         </h3>
                         <p className="text-[#34495E] text-sm max-w-md">
                           AI is transforming your photo into Studio Ghibli style artwork
@@ -959,6 +1029,13 @@ export default function Home() {
                             {countdown > 0 ? `${countdown}s remaining` : 'Almost ready...'}
                           </span>
                         </div>
+                        
+                        {/* Task ID for debugging */}
+                        {currentTaskId && (
+                          <p className="text-xs text-gray-400 font-mono">
+                            任务ID: {currentTaskId.substring(0, 8)}...
+                          </p>
+                        )}
                       </div>
                     </div>
                   ) : (
