@@ -6,9 +6,19 @@ import Script from 'next/script';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Ghiblity - AI Transform Photos into Spirited Away Style Art | Studio Ghibli Avatar Generator',
-  description: 'Transform your photos into magical Studio Ghibli Spirited Away style avatars with AI. Professional quality, instant generation, secure payment via Stripe. Create your anime avatar in 30-60 seconds!',
+  title: 'Ghiblity - Free Ghibli Filter & Avatar Generator | No Sign Up Required',
+  description: 'Free Studio Ghibli filter and Spirited Away style avatar generator. No sign up required! Transform photos with AI-powered Ghibli filter. Try our free Ghibli photo filter - professional quality, instant generation, secure payment via Stripe.',
   keywords: [
+    'free ghibli filter',
+    'ghibli filter no sign up',
+    'free spirited away filter',
+    'studio ghibli filter free',
+    'no registration ghibli generator',
+    'free anime filter',
+    'ghibli photo filter',
+    'spirited away filter free',
+    'free ai ghibli transform',
+    'no sign up avatar generator',
     'Spirited Away avatar',
     'Studio Ghibli art generator',
     'AI anime avatar',
@@ -17,7 +27,9 @@ export const metadata: Metadata = {
     'AI photo transformation',
     '千与千寻头像',
     '吉卜力风格',
-    'AI art generator'
+    'AI art generator',
+    'free ghibli style',
+    'instant ghibli filter'
   ],
   authors: [{ name: 'Ghiblity Team' }],
   creator: 'Ghiblity',
@@ -32,8 +44,8 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'Ghiblity - Transform Photos into Spirited Away Style Art',
-    description: 'AI-powered Studio Ghibli avatar generator. Transform your photos into magical Spirited Away style art in seconds!',
+    title: 'Ghiblity - Free Ghibli Filter & Avatar Generator | No Sign Up Required',
+    description: 'Free Studio Ghibli filter and Spirited Away style avatar generator. No sign up required! Try our free Ghibli photo filter - professional quality, instant generation.',
     url: 'https://ghiblity.com',
     siteName: 'Ghiblity',
     images: [
@@ -41,7 +53,7 @@ export const metadata: Metadata = {
         url: '/images/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Ghiblity - Studio Ghibli Avatar Generator',
+        alt: 'Ghiblity - Free Studio Ghibli Avatar Generator',
       },
     ],
     locale: 'en_US',
@@ -49,8 +61,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ghiblity - AI Spirited Away Avatar Generator',
-    description: 'Transform your photos into magical Studio Ghibli style art with AI. Professional quality in 30-60 seconds!',
+    title: 'Ghiblity - Free Ghibli Filter | No Sign Up Required',
+    description: 'Free Studio Ghibli filter and Spirited Away style avatar generator. No registration needed! Transform photos with AI-powered Ghibli filter in seconds.',
     images: ['/images/twitter-image.png'],
     creator: '@ghiblity',
   },
@@ -106,7 +118,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebApplication",
               "name": "Ghiblity",
-              "description": "AI-powered Studio Ghibli avatar generator that transforms photos into Spirited Away style art",
+              "description": "Free Studio Ghibli filter and avatar generator. No sign up required! AI-powered photo transformation into Spirited Away style art",
               "url": "https://ghiblity.com",
               "applicationCategory": "MultimediaApplication",
               "operatingSystem": "Web",
@@ -122,10 +134,12 @@ export default function RootLayout({
                 "email": "oyyxdd@gmail.com"
               },
               "featureList": [
+                "Free Ghibli filter with no sign up required",
                 "AI-powered photo transformation",
                 "Studio Ghibli Spirited Away style",
-                "Instant generation (30-60 seconds)",
+                "Instant generation (80-120 seconds)",
                 "High-resolution output",
+                "No registration needed",
                 "Secure payment processing"
               ]
             })

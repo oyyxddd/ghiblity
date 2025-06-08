@@ -9,6 +9,7 @@
     "lint": "next lint",
     "check-stripe": "node scripts/check-stripe-config.js",
     "setup-test": "node scripts/setup-test-env.js",
+    "test-gpt4o": "node scripts/test-gpt4o-image-vip.js",
     "test-full": "npm run setup-test && npm run check-stripe && npm run dev"
   },
   "dependencies": {

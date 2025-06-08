@@ -35,12 +35,16 @@ const examples = [
 // FAQ data
 const faqs = [
   {
+    question: 'Is the Ghibli filter really free? Do I need to sign up?',
+    answer: 'Yes! Our Ghibli filter is completely free to try and requires no sign up or registration. Simply upload your photo and see the magic happen. You only pay ($0.99) when you want to download the high-quality result.',
+  },
+  {
     question: 'How does the Spirited Away avatar generation work?',
     answer: 'Our AI analyzes your photo and transforms it into authentic Studio Ghibli art style from Spirited Away (2001). The process captures facial features while applying hand-drawn animation aesthetics.',
   },
   {
     question: 'How long does it take to generate my avatar?',
-    answer: 'Your magical transformation takes 30-60 seconds! No waiting for emails - your avatar appears instantly on screen once ready.',
+    answer: 'Your magical transformation takes 80-120 seconds! No waiting for emails - your avatar appears instantly on screen once ready.',
   },
   {
     question: 'What photo should I upload for best results?',
@@ -67,7 +71,7 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [paymentCompleted, setPaymentCompleted] = useState<boolean>(false);
-  const [countdown, setCountdown] = useState<number>(60);
+  const [countdown, setCountdown] = useState<number>(80);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 检查是否有待生成的任务 + 添加全局粘贴监听
@@ -203,8 +207,17 @@ export default function Home() {
       // 绘制优化后的图像
       ctx?.drawImage(img, 0, 0, width, height);
       
-      // 转换为高质量的base64
-      const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      // 转换为压缩的base64，降低质量以减小文件大小
+      let quality = 0.7; // 默认质量
+      let optimizedDataUrl = canvas.toDataURL('image/jpeg', quality);
+      
+      // 如果图片仍然太大，进一步降低质量
+      while (optimizedDataUrl.length > 1024 * 1024 && quality > 0.3) { // 1MB限制
+        quality -= 0.1;
+        optimizedDataUrl = canvas.toDataURL('image/jpeg', quality);
+      }
+      
+      console.log('Compressed image size:', Math.round(optimizedDataUrl.length / 1024), 'KB, quality:', quality);
       setPreview(optimizedDataUrl);
     };
     
@@ -276,7 +289,7 @@ export default function Home() {
     setError('');
     setPaymentCompleted(false);
     setIsGenerating(false);
-    setCountdown(60);
+    setCountdown(80);
     // 清空 localStorage 中的待处理数据
     localStorage.removeItem('pending_generation');
     localStorage.removeItem('pending_image');
@@ -314,7 +327,7 @@ export default function Home() {
     setPreview(pendingImage);
     setIsGenerating(true);
     setError('');
-    setCountdown(60);
+    setCountdown(80);
     
     // 启动倒计时
     const countdownInterval = setInterval(() => {
@@ -382,7 +395,7 @@ export default function Home() {
       localStorage.removeItem('pending_generation');
     } finally {
       setIsGenerating(false);
-      setCountdown(60); // 重置倒计时
+      setCountdown(80); // 重置倒计时
     }
   };
 
@@ -515,28 +528,28 @@ export default function Home() {
           
           <div className="mb-6">
             <span className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#C4A484] to-[#E8D5B7] text-white text-sm font-medium rounded-full shadow-lg">
-              ✨ AI-Powered Ghibli Magic
+              ✨ Free Ghibli Filter - No Sign Up Required
             </span>
           </div>
           
           <h1 className="heading text-5xl md:text-7xl mb-6 bg-gradient-to-br from-[#2C3E50] via-[#34495E] to-[#C4A484] bg-clip-text text-transparent leading-tight">
-            Turn Your Photo Into
+            Free Ghibli Filter
             <br />
-            <span className="text-[#C4A484] font-bold">Studio Ghibli Art</span>
+            <span className="text-[#C4A484] font-bold">No Sign Up Required</span>
           </h1>
           
           <p className="subheading max-w-3xl mx-auto text-xl leading-relaxed mb-8">
-            Experience the magic of <span className="font-semibold text-[#C4A484]">Spirited Away</span> as our AI transforms your ordinary photos into breathtaking hand-drawn animation masterpieces. Professional quality that rivals Studio Ghibli's legendary artists.
+            Experience the magic of <span className="font-semibold text-[#C4A484]">Spirited Away</span> with our free Ghibli filter! No registration needed - simply upload and transform your photos into breathtaking hand-drawn animation masterpieces. Professional quality that rivals Studio Ghibli's legendary artists.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <div className="flex items-center space-x-2 text-[#34495E]">
               <span className="text-green-500">✓</span>
-              <span className="text-sm font-medium">Authentic 2001 Era Style</span>
+              <span className="text-sm font-medium">Free Ghibli Filter</span>
             </div>
             <div className="flex items-center space-x-2 text-[#34495E]">
               <span className="text-green-500">✓</span>
-              <span className="text-sm font-medium">Professional HD Quality</span>
+              <span className="text-sm font-medium">No Sign Up Required</span>
             </div>
             <div className="flex items-center space-x-2 text-[#34495E]">
               <span className="text-green-500">✓</span>
@@ -546,7 +559,7 @@ export default function Home() {
           
           <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl shadow-sm">
             <span className="text-amber-600 mr-2">🎨</span>
-            <span className="text-amber-800 text-sm font-medium">Over 10,000+ magical transformations created</span>
+            <span className="text-amber-800 text-sm font-medium">Over 10,000+ free Ghibli transformations created - no sign up needed!</span>
           </div>
         </div>
 
@@ -628,7 +641,7 @@ export default function Home() {
               {/* Left Side - Instructions */}
               <div className="space-y-6">
                 <h2 className="heading text-2xl">
-                  How It Works
+                  How Our Free Ghibli Filter Works
                 </h2>
                 <div className="space-y-4">
                   <div className="flex items-start space-x-3">
@@ -636,8 +649,8 @@ export default function Home() {
                       <span className="text-[#C4A484] font-bold">1</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-[#2C3E50]">Upload Your Photo</h3>
-                      <p className="text-[#34495E] text-sm">Choose a clear portrait photo for the best results</p>
+                      <h3 className="font-semibold text-[#2C3E50]">Upload Your Photo (Free, No Sign Up)</h3>
+                      <p className="text-[#34495E] text-sm">Choose a clear portrait photo - no registration required to start</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -1038,7 +1051,7 @@ export default function Home() {
               <div className="flex items-center space-x-4 mt-4 md:mt-0 text-sm text-gray-400">
                 <span>🔒 Secure payments via Stripe</span>
                 <span>•</span>
-                <span>🚀 Generated in 30-60 seconds</span>
+                <span>🚀 Generated in 80-120 seconds</span>
               </div>
             </div>
           </div>
