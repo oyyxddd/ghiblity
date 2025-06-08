@@ -75,6 +75,7 @@ export default function Home() {
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [asyncStatus, setAsyncStatus] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const generationAreaRef = useRef<HTMLDivElement>(null);
 
   // 检查是否有待生成的任务 + 添加全局粘贴监听
   useEffect(() => {
@@ -333,6 +334,16 @@ export default function Home() {
     setError('');
     setCountdown(80);
     setAsyncStatus('Starting generation task...');
+    
+    // 滚动到生成区域
+    setTimeout(() => {
+      if (generationAreaRef.current) {
+        generationAreaRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }, 100); // 稍微延迟确保DOM更新
     
     try {
       // 第一步：启动异步生成任务
@@ -993,7 +1004,7 @@ export default function Home() {
 
         {/* Generation Preview Area */}
         {(isGenerating || generatedImage) && (
-          <div className="max-w-4xl mx-auto mt-12">
+          <div ref={generationAreaRef} className="max-w-4xl mx-auto mt-12">
             <div className="card">
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-[#2C3E50] mb-2">
